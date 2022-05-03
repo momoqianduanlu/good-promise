@@ -160,6 +160,18 @@ promise
     console.log('7. ', res)
   })
 
+let promise1 = new Promise((resolve, reject) => {
+  resolve('promise1')
+})
+
+let promise2 = promise1
+  .then(res => {
+    return res + '...😶😶😶'
+  })
+  .then(res => {
+    console.log(res)
+  })
+console.log('promise2', promise2)
 /**
  * catch在promise源码层面他就是一个then，所以他也遵循then的运行原则，
  * 成功的条件：
