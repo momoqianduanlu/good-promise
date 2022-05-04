@@ -7,7 +7,53 @@ const FULLFILLED = 'fullfilled'
 const REJECT = 'reject'
 
 const resolvePromise = (promise2, x, resolve, reject) => {
-  console.log('promise2, x', promise2, x)
+  /**
+   * 根据promise的规范我们来实现几个feature
+   * 1. 如果promise2与x属于同一个引用，那么要向外抛错
+   * 2. 对于x的类型要进行判断(如果是一个对象或者是一个函数，然后判断x身上有没有then函数)，x.then()有可能会抛错，所以要trycatch
+   * 3. then如果是一个函数then要执行并改变this指向(文档 2.3.3.3)
+   * 4. 如果resolvePromise或者rejectedPromise同时调用或者多次调用我们只处理第一次调用
+   * 5. 处理promise.then()的时候不传任何参数
+   * 6. 处理promise.catch() === 相当于promise.then(null, (err) => { // todo... })
+   */
+  let isCalled = false
+
+  if (promise2 === x) {
+    return reject(
+      new TypeError('Chaining cycle detected for promise #<Promise>')
+    )
+  }
+  if ((typeof x === 'object' && x !== null) || typeof x === 'function') {
+    try {
+      const then = x.then
+      if (typeof then === 'function') {
+        // 此时认为是一个promise
+        then.call(
+          x,
+          y => {
+            if (isCalled) return
+            isCalled = true
+            // resolve(y)
+            // 递归是为了处理promise的嵌套
+            resolvePromise(promise2, y, resolve, reject)
+          },
+          r => {
+            if (isCalled) return
+            isCalled = true
+            reject(r)
+          }
+        )
+      } else {
+        resolve(x)
+      }
+    } catch (error) {
+      if (isCalled) return
+      isCalled = true
+      reject(error)
+    }
+  } else {
+    resolve(x)
+  }
 }
 
 class MyPromise {
@@ -45,6 +91,14 @@ class MyPromise {
   }
   // promise.then()
   then (onFullFilled, onRejected) {
+    onFullFilled =
+      typeof onFullFilled === 'function' ? onFullFilled : value => value
+    onRejected =
+      typeof onRejected === 'function'
+        ? onRejected
+        : error => {
+            throw error
+          }
     /**
      * 4. then函数必须返回一个promise (https://promisesaplus.com/)
      * onFullFilled和onRejected函数会返回一个值x，这个值可能是普通值/也可能是一个promise/还有可能是throw的一个error，
@@ -101,6 +155,10 @@ class MyPromise {
       }
     })
     return promise2
+  }
+  // promise.catch()
+  catch (errorCb) {
+    return this.then(null, errorCb)
   }
 }
 
