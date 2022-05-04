@@ -49,7 +49,7 @@ class MyPromise {
      * 4. then函数必须返回一个promise (https://promisesaplus.com/)
      * onFullFilled和onRejected函数会返回一个值x，这个值可能是普通值/也可能是一个promise/还有可能是throw的一个error，
      * 通过try catch 可以捕获error，然而对于返回值x，我们要通过一个函数来进行处理。
-     * resolvePromise函数的执行时机需要注注意，因为在同步代码执行过程中promise2有可能没执行完，x的值可能也没返回。
+     * resolvePromise函数的执行时机需要注意，因为在同步代码执行过程中promise2有可能没执行完，x的值可能也没返回。
      */
     const promise2 = new MyPromise((resolve, reject) => {
       if (this.status === FULLFILLED) {
